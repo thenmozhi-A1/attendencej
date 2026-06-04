@@ -55,7 +55,6 @@ public class AttendanceService {
                 }
             }
         }
-
 =======
 >>>>>>> a51b55306b65905891f055e408b3cf0c90e98396
         LocalDateTime now = LocalDateTime.now();

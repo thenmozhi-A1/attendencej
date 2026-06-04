@@ -75,14 +75,10 @@ public class LeaveService {
             throw new BadRequestException("Can only approve or reject a leave request");
         }
 
-<<<<<<< HEAD
         // Only ADMINs (manager role is not present in the system) can approve/reject
         if (approver.getRole() != Employee.Role.ADMIN) {
             throw new UnauthorizedException("Only admins can approve or reject leave requests");
         }
-
-=======
->>>>>>> a51b55306b65905891f055e408b3cf0c90e98396
         leaveRequest.setStatus(newStatus);
         leaveRequest.setApprovedBy(approver);
         leaveRequest.setApprovalRemarks(approvalDTO.getApprovalRemarks());
