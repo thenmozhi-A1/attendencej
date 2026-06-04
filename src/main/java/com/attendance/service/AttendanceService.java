@@ -42,6 +42,7 @@ public class AttendanceService {
             throw new BadRequestException("Employee has already checked in today");
         }
 
+<<<<<<< HEAD
         if (employee.getRole() == Employee.Role.TECH) {
             // Allow check-in either by providing matching fingerprint data
             // or by completing a WebAuthn authentication (webAuthnAuthenticated flag)
@@ -55,6 +56,8 @@ public class AttendanceService {
             }
         }
 
+=======
+>>>>>>> a51b55306b65905891f055e408b3cf0c90e98396
         LocalDateTime now = LocalDateTime.now();
         AttendanceRecord.AttendanceStatus status = determineCheckInStatus(now.toLocalTime());
 

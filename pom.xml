@@ -52,6 +52,7 @@
             <scope>runtime</scope>
         </dependency>
 
+<<<<<<< HEAD
         <!-- H2 Database -->
         <dependency>
             <groupId>com.h2database</groupId>
@@ -59,6 +60,8 @@
             <scope>runtime</scope>
         </dependency>
 
+=======
+>>>>>>> a51b55306b65905891f055e408b3cf0c90e98396
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>

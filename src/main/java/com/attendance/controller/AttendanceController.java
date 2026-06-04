@@ -21,6 +21,7 @@ import java.util.List;
 public class AttendanceController {
 
     private final AttendanceService attendanceService;
+<<<<<<< HEAD
     private final com.attendance.util.JwtUtil jwtUtil;
 
     @PostMapping("/check-in")
@@ -39,6 +40,11 @@ public class AttendanceController {
             }
         }
 
+=======
+
+    @PostMapping("/check-in")
+    public ResponseEntity<ApiResponse<AttendanceDTO>> checkIn(@Valid @RequestBody CheckInRequest request) {
+>>>>>>> a51b55306b65905891f055e408b3cf0c90e98396
         AttendanceDTO response = attendanceService.checkIn(request);
         return ResponseEntity.ok(ApiResponse.success("Check-in successful", response));
     }

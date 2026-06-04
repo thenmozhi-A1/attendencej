@@ -60,7 +60,11 @@ if defined MAVEN_HOME goto runMaven
 if defined M2_HOME goto runMavenFromM2
 
 @REM Download Maven if not present
+<<<<<<< HEAD
 set MAVEN_HOME=%MAVEN_PROJECTBASEDIR%.mvn\wrapper\dists\apache-maven-%DEFAULT_MAVEN_VERSION%\apache-maven-%DEFAULT_MAVEN_VERSION%
+=======
+set MAVEN_HOME=%MAVEN_PROJECTBASEDIR%.mvn\wrapper\dists\apache-maven-%DEFAULT_MAVEN_VERSION%
+>>>>>>> a51b55306b65905891f055e408b3cf0c90e98396
 if exist "%MAVEN_HOME%\bin\mvn.cmd" goto runMaven
 
 echo Downloading Maven %DEFAULT_MAVEN_VERSION%...

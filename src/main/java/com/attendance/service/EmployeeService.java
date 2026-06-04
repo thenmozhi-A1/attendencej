@@ -67,20 +67,29 @@ public class EmployeeService {
             throw new BadRequestException("Employee with code " + employeeDTO.getEmployeeCode() + " already exists");
         }
 
+<<<<<<< HEAD
         Employee.Role role = Employee.Role.valueOf(employeeDTO.getRole().toUpperCase());
         if (role == Employee.Role.TECH && (employeeDTO.getFingerprintData() == null || employeeDTO.getFingerprintData().isBlank())) {
             throw new BadRequestException("Fingerprint data is required for TECH employees");
         }
 
+=======
+>>>>>>> a51b55306b65905891f055e408b3cf0c90e98396
         Employee employee = Employee.builder()
                 .employeeCode(employeeDTO.getEmployeeCode())
                 .name(resolveName(employeeDTO))
                 .email(employeeDTO.getEmail())
                 .phone(employeeDTO.getPhone())
+<<<<<<< HEAD
                 .role(role)
                 .monthlySalary(employeeDTO.getMonthlySalary() != null ? employeeDTO.getMonthlySalary() : BigDecimal.ZERO)
                 .isActive(employeeDTO.getIsActive() != null ? employeeDTO.getIsActive() : true)
                 .fingerprintData(employeeDTO.getFingerprintData())
+=======
+                .role(Employee.Role.valueOf(employeeDTO.getRole().toUpperCase()))
+                .monthlySalary(employeeDTO.getMonthlySalary() != null ? employeeDTO.getMonthlySalary() : BigDecimal.ZERO)
+                .isActive(employeeDTO.getIsActive() != null ? employeeDTO.getIsActive() : true)
+>>>>>>> a51b55306b65905891f055e408b3cf0c90e98396
                 .build();
 
         if (employeeDTO.getDepartmentId() != null) {
@@ -129,9 +138,12 @@ public class EmployeeService {
                     .orElseThrow(() -> new ResourceNotFoundException("Department", "id", employeeDTO.getDepartmentId()));
             employee.setDepartment(department);
         }
+<<<<<<< HEAD
         if (employeeDTO.getFingerprintData() != null) {
             employee.setFingerprintData(employeeDTO.getFingerprintData());
         }
+=======
+>>>>>>> a51b55306b65905891f055e408b3cf0c90e98396
 
         Employee updatedEmployee = employeeRepository.save(employee);
         return convertToDTO(updatedEmployee);
@@ -150,6 +162,7 @@ public class EmployeeService {
         return employeeRepository.findByIsActiveTrue().size();
     }
 
+<<<<<<< HEAD
     @Transactional
     public EmployeeDTO updateEmployeeFingerprint(Long id, String fingerprintData) {
         Employee employee = employeeRepository.findById(id)
@@ -164,6 +177,8 @@ public class EmployeeService {
         return convertToDTO(updatedEmployee);
     }
 
+=======
+>>>>>>> a51b55306b65905891f055e408b3cf0c90e98396
     private EmployeeDTO convertToDTO(Employee employee) {
         String[] nameParts = splitName(employee.getName());
         return EmployeeDTO.builder()
@@ -182,7 +197,10 @@ public class EmployeeService {
                 .isActive(employee.getIsActive())
                 .status(Boolean.TRUE.equals(employee.getIsActive()) ? "active" : "inactive")
                 .createdAt(employee.getCreatedAt())
+<<<<<<< HEAD
                 .fingerprintData(employee.getFingerprintData())
+=======
+>>>>>>> a51b55306b65905891f055e408b3cf0c90e98396
                 .build();
     }
 

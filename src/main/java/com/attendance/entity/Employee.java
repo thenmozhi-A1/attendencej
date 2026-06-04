@@ -47,9 +47,12 @@ public class Employee {
     @Builder.Default
     private Boolean isActive = true;
 
+<<<<<<< HEAD
     @Column(name = "fingerprint_data", length = 1000)
     private String fingerprintData;
 
+=======
+>>>>>>> a51b55306b65905891f055e408b3cf0c90e98396
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 

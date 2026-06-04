@@ -69,6 +69,7 @@ public class EmployeeController {
         employeeService.deleteEmployee(id);
         return ResponseEntity.ok(ApiResponse.success("Employee deactivated"));
     }
+<<<<<<< HEAD
 
     @PutMapping("/{id}/fingerprint")
     public ResponseEntity<ApiResponse<EmployeeDTO>> updateFingerprint(
@@ -77,4 +78,6 @@ public class EmployeeController {
         EmployeeDTO updated = employeeService.updateEmployeeFingerprint(id, fingerprintData);
         return ResponseEntity.ok(ApiResponse.success("Fingerprint updated", updated));
     }
+=======
+>>>>>>> a51b55306b65905891f055e408b3cf0c90e98396
 }
