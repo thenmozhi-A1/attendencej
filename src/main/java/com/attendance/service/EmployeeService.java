@@ -180,10 +180,7 @@ public class EmployeeService {
                 .isActive(employee.getIsActive())
                 .status(Boolean.TRUE.equals(employee.getIsActive()) ? "active" : "inactive")
                 .createdAt(employee.getCreatedAt())
-<<<<<<< HEAD
                 .fingerprintData(employee.getFingerprintData())
-=======
->>>>>>> a51b55306b65905891f055e408b3cf0c90e98396
                 .build();
     }
 
