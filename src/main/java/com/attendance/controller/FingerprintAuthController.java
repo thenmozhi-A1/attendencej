@@ -1,14 +1,15 @@
 package com.attendance.controller;
 
 import com.attendance.dto.ApiResponse;
+import com.attendance.dto.TechLoginRequest;
+import com.attendance.service.FingerprintAuthService;
+import jakarta.servlet.http.HttpServletResponse;
+import java.time.Duration;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.*;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.util.StringUtils;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletResponse;
 import java.util.UUID;
 
 @RestController
@@ -35,21 +36,15 @@ public class FingerprintAuthController {
         // Generate session token (placeholder)
         String token = UUID.randomUUID().toString();
         // Set HttpOnly, Secure, SameSite cookie
-        Cookie cookie = new Cookie("SESSION", token);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(60 * 60 * 24); // 1 day
-        cookie.setSameSite("Lax");
-        response.addCookie(cookie);
+        ResponseCookie cookie = ResponseCookie.from("SESSION", token)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(Duration.ofDays(1))
+                .sameSite("Lax")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         // Build success response (could include user info)
         return ResponseEntity.ok(ApiResponse.success("Fingerprint verified", true));
     }
-}
-
-// Simple request DTO for fingerprint data
-class FingerprintRequest {
-    private String credential;
-    public String getCredential() { return credential; }
-    public void setCredential(String credential) { this.credential = credential; }
 }
