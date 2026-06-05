@@ -23,7 +23,8 @@ public class AuthService {
     private final JwtUtil jwtUtil;
 
     public LoginResponse adminLogin(LoginRequest request) {
-        AdminCredential credential = adminCredentialRepository.findByUsername(request.getUsername())
+        String username = request.getUsername() != null ? request.getUsername().trim() : "";
+        AdminCredential credential = adminCredentialRepository.findByUsername(username)
                 .orElseThrow(() -> new UnauthorizedException("Invalid username or password"));
 
         if (!passwordEncoder.matches(request.getPassword(), credential.getPassword())) {
