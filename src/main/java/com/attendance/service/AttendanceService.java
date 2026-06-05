@@ -10,6 +10,7 @@ import com.attendance.exception.BadRequestException;
 import com.attendance.exception.ResourceNotFoundException;
 import com.attendance.repository.AttendanceRecordRepository;
 import com.attendance.repository.EmployeeRepository;
+import com.attendance.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ public class AttendanceService {
 
     private final AttendanceRecordRepository attendanceRecordRepository;
     private final EmployeeRepository employeeRepository;
+    private final JwtUtil jwtUtil;
 
     private static final LocalTime LATE_THRESHOLD = LocalTime.of(9, 30);
     private static final LocalTime HALF_DAY_THRESHOLD = LocalTime.of(13, 0);
@@ -43,16 +45,7 @@ public class AttendanceService {
         }
 
         if (employee.getRole() == Employee.Role.TECH) {
-            // Allow check-in either by providing matching fingerprint data
-            // or by completing a WebAuthn authentication (webAuthnAuthenticated flag)
-            if ((request.getFingerprintData() == null || request.getFingerprintData().isEmpty()) && !request.isWebAuthnAuthenticated()) {
-                throw new BadRequestException("Fingerprint data is required for TECH employees");
-            }
-            if (request.getFingerprintData() != null && !request.getFingerprintData().isEmpty()) {
-                if (!request.getFingerprintData().equals(employee.getFingerprintData())) {
-                    throw new BadRequestException("Invalid fingerprint data");
-                }
-            }
+            validateTechBiometricCheckIn(request, employee);
         }
         LocalDateTime now = LocalDateTime.now();
         AttendanceRecord.AttendanceStatus status = determineCheckInStatus(now.toLocalTime());
@@ -159,6 +152,29 @@ public class AttendanceService {
             return AttendanceRecord.AttendanceStatus.LATE;
         }
         return AttendanceRecord.AttendanceStatus.PRESENT;
+    }
+
+    private void validateTechBiometricCheckIn(CheckInRequest request, Employee employee) {
+        String webAuthnToken = request.getWebAuthnToken();
+        if (webAuthnToken == null || webAuthnToken.isBlank()) {
+            throw new BadRequestException("Biometric verification is required for TECH employees");
+        }
+
+        if (!jwtUtil.validateToken(webAuthnToken)) {
+            throw new BadRequestException("Biometric verification has expired. Please verify again.");
+        }
+
+        Long verifiedEmployeeId = jwtUtil.extractEmployeeId(webAuthnToken);
+        String authMethod = jwtUtil.extractAuthMethod(webAuthnToken);
+        String purpose = jwtUtil.extractPurpose(webAuthnToken);
+
+        if (!employee.getId().equals(verifiedEmployeeId)
+                || !"webauthn".equals(authMethod)
+                || !"attendance_check_in".equals(purpose)) {
+            throw new BadRequestException("Invalid biometric verification for this employee");
+        }
+
+        request.setWebAuthnAuthenticated(true);
     }
 
     private double calculateWorkHours(LocalDateTime checkIn, LocalDateTime checkOut) {

@@ -35,9 +35,23 @@ public class JwtUtil {
         return createToken(claims, username);
     }
 
+    public String generateBiometricToken(Long employeeId, String username, String role) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("employeeId", employeeId);
+        claims.put("role", role);
+        claims.put("username", username);
+        claims.put("authMethod", "webauthn");
+        claims.put("purpose", "attendance_check_in");
+        return createToken(claims, username, 120_000L);
+    }
+
     private String createToken(Map<String, Object> claims, String subject) {
+        return createToken(claims, subject, expiration);
+    }
+
+    private String createToken(Map<String, Object> claims, String subject, long expirationMillis) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + expiration);
+        Date expiryDate = new Date(now.getTime() + expirationMillis);
 
         return Jwts.builder()
                 .claims(claims)
@@ -58,6 +72,14 @@ public class JwtUtil {
 
     public String extractRole(String token) {
         return extractClaim(token, claims -> claims.get("role", String.class));
+    }
+
+    public String extractAuthMethod(String token) {
+        return extractClaim(token, claims -> claims.get("authMethod", String.class));
+    }
+
+    public String extractPurpose(String token) {
+        return extractClaim(token, claims -> claims.get("purpose", String.class));
     }
 
     public Date extractExpiration(String token) {

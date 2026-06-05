@@ -6,6 +6,7 @@ import com.attendance.dto.CheckInRequest;
 import com.attendance.dto.CheckOutRequest;
 import com.attendance.dto.DashboardStats;
 import com.attendance.service.AttendanceService;
+import com.attendance.util.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -21,20 +22,19 @@ import java.util.List;
 public class AttendanceController {
 
     private final AttendanceService attendanceService;
-    private final com.attendance.util.JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
 
     @PostMapping("/check-in")
     public ResponseEntity<ApiResponse<AttendanceDTO>> checkIn(
             @Valid @RequestBody CheckInRequest request,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        // If an Authorization header with a valid JWT is provided, extract the employee id
+        // The normal session JWT identifies the employee. It does not count as biometric proof.
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             if (jwtUtil.validateToken(token)) {
                 Long tokenEmployeeId = jwtUtil.extractEmployeeId(token);
                 if (tokenEmployeeId != null) {
                     request.setEmployeeId(tokenEmployeeId);
-                    request.setWebAuthnAuthenticated(true);
                 }
             }
         }

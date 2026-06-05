@@ -14,9 +14,9 @@ public class CheckInRequest {
     private Long employeeId;
 
     private String remarks;
-    private String fingerprintData;
+    private String webAuthnToken;
 
-    // Set by controller when authentication token is present and valid
+    // Set by service after validating the short-lived WebAuthn token
     @Builder.Default
     private boolean webAuthnAuthenticated = false;
 }

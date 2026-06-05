@@ -14,6 +14,7 @@ import com.attendance.repository.WebAuthnChallengeRepository;
 import com.attendance.repository.WebAuthnCredentialRepository;
 import com.attendance.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +37,12 @@ public class WebAuthnService {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final int CHALLENGE_LENGTH = 32;
     private static final int CHALLENGE_EXPIRY_MINUTES = 5;
+
+    @Value("${webauthn.rp-id:localhost}")
+    private String rpId;
+
+    @Value("${webauthn.rp-name:Attendance Management}")
+    private String rpName;
 
     @Transactional
     public Map<String, Object> generateRegistrationChallenge(Long employeeId) {
@@ -64,8 +71,23 @@ public class WebAuthnService {
         response.put("challenge", challengeBase64);
         response.put("employeeId", employeeId);
         response.put("employeeName", employee.getName());
-        response.put("rpId", "localhost");
+        response.put("rpId", rpId);
+        response.put("rp", Map.of("name", rpName, "id", rpId));
+        response.put("user", Map.of(
+                "id", Base64.getUrlEncoder().withoutPadding().encodeToString(employee.getId().toString().getBytes()),
+                "name", employee.getEmployeeCode(),
+                "displayName", employee.getName()
+        ));
+        response.put("pubKeyCredParams", List.of(
+                Map.of("type", "public-key", "alg", -7),
+                Map.of("type", "public-key", "alg", -257)
+        ));
+        response.put("authenticatorSelection", Map.of(
+                "authenticatorAttachment", "platform",
+                "userVerification", "required"
+        ));
         response.put("timeout", 60000);
+        response.put("attestation", "none");
 
         return response;
     }
@@ -114,9 +136,9 @@ public class WebAuthnService {
     }
 
     @Transactional
-    public Map<String, Object> generateAuthenticationChallenge(Long employeeId) {
-        Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", employeeId));
+    public Map<String, Object> generateAuthenticationChallenge(String employeeIdentifier) {
+        Employee employee = findEmployeeByIdOrCode(employeeIdentifier);
+        Long employeeId = employee.getId();
 
         List<WebAuthnCredential> credentials = credentialRepository.findByEmployeeId(employeeId);
         if (credentials.isEmpty()) {
@@ -145,8 +167,12 @@ public class WebAuthnService {
         response.put("challenge", challengeBase64);
         response.put("employeeId", employeeId);
         response.put("credentialIds", credentialIds);
-        response.put("rpId", "localhost");
+        response.put("allowCredentials", credentialIds.stream()
+                .map(id -> Map.of("type", "public-key", "id", id))
+                .toList());
+        response.put("rpId", rpId);
         response.put("timeout", 60000);
+        response.put("userVerification", "required");
 
         return response;
     }
@@ -181,7 +207,9 @@ public class WebAuthnService {
         // For this implementation, we verify that the credential exists and is valid.
         // The browser's navigator.credentials.get() handles the actual biometric verification.
 
-        if (request.getSignCount() <= credential.getSignCount()) {
+        if (request.getSignCount() > 0
+                && credential.getSignCount() > 0
+                && request.getSignCount() <= credential.getSignCount()) {
             throw new BadRequestException("Invalid sign count - possible replay attack detected");
         }
 
@@ -191,13 +219,26 @@ public class WebAuthnService {
         challengeRepository.delete(challenge);
 
         String token = jwtUtil.generateToken(employee.getId(), employee.getEmail(), employee.getRole().name());
+        String biometricToken = jwtUtil.generateBiometricToken(employee.getId(), employee.getEmail(), employee.getRole().name());
 
         return LoginResponse.builder()
                 .token(token)
+                .biometricToken(biometricToken)
                 .employeeId(employee.getId())
                 .role(employee.getRole().name())
                 .name(employee.getName())
                 .build();
+    }
+
+    private Employee findEmployeeByIdOrCode(String employeeIdentifier) {
+        try {
+            Long employeeId = Long.valueOf(employeeIdentifier);
+            return employeeRepository.findById(employeeId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", employeeId));
+        } catch (NumberFormatException ignored) {
+            return employeeRepository.findByEmployeeCode(employeeIdentifier)
+                    .orElseThrow(() -> new ResourceNotFoundException("Employee", "employeeCode", employeeIdentifier));
+        }
     }
 
     @Transactional(readOnly = true)

@@ -69,11 +69,4 @@ public class EmployeeController {
         employeeService.deleteEmployee(id);
         return ResponseEntity.ok(ApiResponse.success("Employee deactivated"));
     }
-    @PutMapping("/{id}/fingerprint")
-    public ResponseEntity<ApiResponse<EmployeeDTO>> updateFingerprint(
-            @PathVariable Long id,
-            @RequestBody String fingerprintData) {
-        EmployeeDTO updated = employeeService.updateEmployeeFingerprint(id, fingerprintData);
-        return ResponseEntity.ok(ApiResponse.success("Fingerprint updated", updated));
-    }
 }

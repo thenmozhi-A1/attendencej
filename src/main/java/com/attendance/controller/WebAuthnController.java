@@ -35,7 +35,7 @@ public class WebAuthnController {
 
     @PostMapping("/auth/challenge")
     public ResponseEntity<ApiResponse<Map<String, Object>>> generateAuthenticationChallenge(
-            @RequestParam Long employeeId) {
+            @RequestParam String employeeId) {
         Map<String, Object> challenge = webAuthnService.generateAuthenticationChallenge(employeeId);
         return ResponseEntity.ok(ApiResponse.success("Authentication challenge generated", challenge));
     }

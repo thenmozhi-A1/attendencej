@@ -1,7 +1,7 @@
 package com.attendance.service;
 
 import com.attendance.dto.EmployeeDTO;
-import com.attendance.exception.BadRequestException;
+import com.attendance.entity.Employee;
 import com.attendance.repository.DepartmentRepository;
 import com.attendance.repository.EmployeeRepository;
 import org.junit.jupiter.api.Test;
@@ -12,7 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,7 +28,7 @@ class EmployeeServiceTest {
     private EmployeeService employeeService;
 
     @Test
-    void createEmployee_whenRoleIsTechAndFingerprintMissing_shouldThrowBadRequestException() {
+    void createEmployee_whenRoleIsTechAndFingerprintMissing_shouldCreateEmployee() {
         EmployeeDTO employeeDTO = EmployeeDTO.builder()
                 .employeeCode("EMP001")
                 .firstName("Alice")
@@ -41,7 +41,16 @@ class EmployeeServiceTest {
 
         when(employeeRepository.existsByEmail(employeeDTO.getEmail())).thenReturn(false);
         when(employeeRepository.existsByEmployeeCode(employeeDTO.getEmployeeCode())).thenReturn(false);
+        when(employeeRepository.save(org.mockito.ArgumentMatchers.any(Employee.class)))
+                .thenAnswer(invocation -> {
+                    Employee employee = invocation.getArgument(0);
+                    employee.setId(1L);
+                    return employee;
+                });
 
-        assertThrows(BadRequestException.class, () -> employeeService.createEmployee(employeeDTO));
+        EmployeeDTO created = employeeService.createEmployee(employeeDTO);
+
+        assertEquals("EMP001", created.getEmployeeCode());
+        assertEquals("tech", created.getRole());
     }
 }

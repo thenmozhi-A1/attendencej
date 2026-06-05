@@ -29,5 +29,4 @@ public class EmployeeDTO {
     private String status;
     private LocalDate hireDate;
     private LocalDateTime createdAt;
-    private String fingerprintData;
 }

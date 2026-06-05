@@ -10,6 +10,7 @@ import lombok.*;
 public class LoginResponse {
 
     private String token;
+    private String biometricToken;
     private Long employeeId;
     private String role;
     private String name;

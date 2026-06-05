@@ -68,9 +68,6 @@ public class EmployeeService {
         }
 
         Employee.Role role = Employee.Role.valueOf(employeeDTO.getRole().toUpperCase());
-        if (role == Employee.Role.TECH && (employeeDTO.getFingerprintData() == null || employeeDTO.getFingerprintData().isBlank())) {
-            throw new BadRequestException("Fingerprint data is required for TECH employees");
-        }
         Employee employee = Employee.builder()
                 .employeeCode(employeeDTO.getEmployeeCode())
                 .name(resolveName(employeeDTO))
@@ -79,7 +76,6 @@ public class EmployeeService {
                 .role(role)
                 .monthlySalary(employeeDTO.getMonthlySalary() != null ? employeeDTO.getMonthlySalary() : BigDecimal.ZERO)
                 .isActive(employeeDTO.getIsActive() != null ? employeeDTO.getIsActive() : true)
-                .fingerprintData(employeeDTO.getFingerprintData())
                 .build();
 
         if (employeeDTO.getDepartmentId() != null) {
@@ -128,9 +124,6 @@ public class EmployeeService {
                     .orElseThrow(() -> new ResourceNotFoundException("Department", "id", employeeDTO.getDepartmentId()));
             employee.setDepartment(department);
         }
-        if (employeeDTO.getFingerprintData() != null) {
-            employee.setFingerprintData(employeeDTO.getFingerprintData());
-        }
 
         Employee updatedEmployee = employeeRepository.save(employee);
         return convertToDTO(updatedEmployee);
@@ -149,19 +142,6 @@ public class EmployeeService {
         return employeeRepository.findByIsActiveTrue().size();
     }
 
-    @Transactional
-    public EmployeeDTO updateEmployeeFingerprint(Long id, String fingerprintData) {
-        Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", id));
-
-        if (employee.getRole() != Employee.Role.TECH) {
-            throw new BadRequestException("Fingerprint can only be added for TECH employees");
-        }
-
-        employee.setFingerprintData(fingerprintData);
-        Employee updatedEmployee = employeeRepository.save(employee);
-        return convertToDTO(updatedEmployee);
-    }
     private EmployeeDTO convertToDTO(Employee employee) {
         String[] nameParts = splitName(employee.getName());
         return EmployeeDTO.builder()
@@ -180,7 +160,6 @@ public class EmployeeService {
                 .isActive(employee.getIsActive())
                 .status(Boolean.TRUE.equals(employee.getIsActive()) ? "active" : "inactive")
                 .createdAt(employee.getCreatedAt())
-                .fingerprintData(employee.getFingerprintData())
                 .build();
     }
 
