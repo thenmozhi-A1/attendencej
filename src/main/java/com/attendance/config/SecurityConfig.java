@@ -24,7 +24,7 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
 
     private static final String[] PUBLIC_ENDPOINTS = {
-            "/api/auth/admin-login",
+            "/api/auth/login",
             "/api/webauthn/register/challenge",
             "/api/webauthn/register/verify",
             "/api/webauthn/auth/challenge",

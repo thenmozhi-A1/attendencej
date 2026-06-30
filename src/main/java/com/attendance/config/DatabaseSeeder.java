@@ -1,9 +1,7 @@
 package com.attendance.config;
 
-import com.attendance.entity.AdminCredential;
 import com.attendance.entity.Department;
 import com.attendance.entity.Employee;
-import com.attendance.repository.AdminCredentialRepository;
 import com.attendance.repository.DepartmentRepository;
 import com.attendance.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,12 +17,11 @@ public class DatabaseSeeder implements CommandLineRunner {
 
     private final DepartmentRepository departmentRepository;
     private final EmployeeRepository employeeRepository;
-    private final AdminCredentialRepository adminCredentialRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) throws Exception {
-        if (adminCredentialRepository.count() == 0) {
+        if (employeeRepository.count() == 0) {
             // Seed a default department
             Department hrDept = Department.builder()
                     .name("Human Resources")
@@ -48,16 +45,9 @@ public class DatabaseSeeder implements CommandLineRunner {
                     .department(hrDept)
                     .monthlySalary(new BigDecimal("150000.00"))
                     .isActive(true)
-                    .build();
-            employeeRepository.save(adminEmployee);
-
-            // Seed default admin credentials
-            AdminCredential adminCreds = AdminCredential.builder()
-                    .employee(adminEmployee)
-                    .username("admin")
                     .password(passwordEncoder.encode("admin"))
                     .build();
-            adminCredentialRepository.save(adminCreds);
+            employeeRepository.save(adminEmployee);
 
             // Seed a tech employee
             Employee techEmployee = Employee.builder()
@@ -69,12 +59,13 @@ public class DatabaseSeeder implements CommandLineRunner {
                     .department(techDept)
                     .monthlySalary(new BigDecimal("120000.00"))
                     .isActive(true)
+                    .password(passwordEncoder.encode("password123"))
                     .build();
             employeeRepository.save(techEmployee);
 
             System.out.println("=================================================");
             System.out.println("DATABASE SEEDED SUCCESSFULLY WITH DEFAULT USERS!");
-            System.out.println("Admin login -> Username: admin, Password: admin");
+            System.out.println("Admin login -> Username: admin@attendance.com (or EMP001), Password: admin");
             System.out.println("=================================================");
         }
     }

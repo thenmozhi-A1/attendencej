@@ -25,6 +25,7 @@ public class EmployeeDTO {
     private String department;
     private String departmentName;
     private BigDecimal monthlySalary;
+    private String password;
     private Boolean isActive;
     private String status;
     private LocalDate hireDate;

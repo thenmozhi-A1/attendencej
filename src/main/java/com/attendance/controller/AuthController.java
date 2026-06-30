@@ -18,10 +18,10 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("/admin-login")
-    public ResponseEntity<ApiResponse<LoginResponse>> adminLogin(@Valid @RequestBody LoginRequest request) {
-        LoginResponse response = authService.adminLogin(request);
-        return ResponseEntity.ok(ApiResponse.success("Admin login successful", response));
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
+        LoginResponse response = authService.login(request);
+        return ResponseEntity.ok(ApiResponse.success("Login successful", response));
     }
 
     @GetMapping("/me")

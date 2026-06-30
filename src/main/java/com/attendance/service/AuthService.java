@@ -2,11 +2,9 @@ package com.attendance.service;
 
 import com.attendance.dto.LoginRequest;
 import com.attendance.dto.LoginResponse;
-import com.attendance.entity.AdminCredential;
 import com.attendance.entity.Employee;
 import com.attendance.exception.BadRequestException;
 import com.attendance.exception.UnauthorizedException;
-import com.attendance.repository.AdminCredentialRepository;
 import com.attendance.repository.EmployeeRepository;
 import com.attendance.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -17,26 +15,25 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final AdminCredentialRepository adminCredentialRepository;
     private final EmployeeRepository employeeRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-    public LoginResponse adminLogin(LoginRequest request) {
+    public LoginResponse login(LoginRequest request) {
         String username = request.getUsername() != null ? request.getUsername().trim() : "";
-        AdminCredential credential = adminCredentialRepository.findByUsername(username)
-                .orElseThrow(() -> new UnauthorizedException("Invalid username or password"));
+        
+        Employee employee = employeeRepository.findByEmployeeCode(username)
+                .orElseGet(() -> employeeRepository.findByEmail(username)
+                        .orElseThrow(() -> new UnauthorizedException("Invalid username or password")));
 
-        if (!passwordEncoder.matches(request.getPassword(), credential.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), employee.getPassword())) {
             throw new UnauthorizedException("Invalid username or password");
         }
-
-        Employee employee = credential.getEmployee();
         if (!employee.getIsActive()) {
             throw new BadRequestException("Account is deactivated");
         }
 
-        String token = jwtUtil.generateToken(employee.getId(), credential.getUsername(), employee.getRole().name());
+        String token = jwtUtil.generateToken(employee.getId(), employee.getEmployeeCode(), employee.getRole().name());
 
         return LoginResponse.builder()
                 .token(token)

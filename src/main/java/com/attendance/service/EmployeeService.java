@@ -8,6 +8,7 @@ import com.attendance.exception.ResourceNotFoundException;
 import com.attendance.repository.DepartmentRepository;
 import com.attendance.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +22,7 @@ public class EmployeeService {
 
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public List<EmployeeDTO> getAllEmployees() {
@@ -76,6 +78,9 @@ public class EmployeeService {
                 .role(role)
                 .monthlySalary(employeeDTO.getMonthlySalary() != null ? employeeDTO.getMonthlySalary() : BigDecimal.ZERO)
                 .isActive(employeeDTO.getIsActive() != null ? employeeDTO.getIsActive() : true)
+                .password(employeeDTO.getPassword() != null && !employeeDTO.getPassword().isBlank() 
+                    ? passwordEncoder.encode(employeeDTO.getPassword()) 
+                    : passwordEncoder.encode("password123"))
                 .build();
 
         if (employeeDTO.getDepartmentId() != null) {
@@ -118,6 +123,9 @@ public class EmployeeService {
         }
         if (employeeDTO.getMonthlySalary() != null) {
             employee.setMonthlySalary(employeeDTO.getMonthlySalary());
+        }
+        if (employeeDTO.getPassword() != null && !employeeDTO.getPassword().isBlank()) {
+            employee.setPassword(passwordEncoder.encode(employeeDTO.getPassword()));
         }
         if (employeeDTO.getDepartmentId() != null) {
             Department department = departmentRepository.findById(employeeDTO.getDepartmentId())

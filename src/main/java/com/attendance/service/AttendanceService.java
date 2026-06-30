@@ -44,9 +44,7 @@ public class AttendanceService {
             throw new BadRequestException("Employee has already checked in today");
         }
 
-        if (employee.getRole() == Employee.Role.TECH) {
-            validateTechBiometricCheckIn(request, employee);
-        }
+
         LocalDateTime now = LocalDateTime.now();
         AttendanceRecord.AttendanceStatus status = determineCheckInStatus(now.toLocalTime());
 
@@ -154,28 +152,7 @@ public class AttendanceService {
         return AttendanceRecord.AttendanceStatus.PRESENT;
     }
 
-    private void validateTechBiometricCheckIn(CheckInRequest request, Employee employee) {
-        String webAuthnToken = request.getWebAuthnToken();
-        if (webAuthnToken == null || webAuthnToken.isBlank()) {
-            throw new BadRequestException("Biometric verification is required for TECH employees");
-        }
 
-        if (!jwtUtil.validateToken(webAuthnToken)) {
-            throw new BadRequestException("Biometric verification has expired. Please verify again.");
-        }
-
-        Long verifiedEmployeeId = jwtUtil.extractEmployeeId(webAuthnToken);
-        String authMethod = jwtUtil.extractAuthMethod(webAuthnToken);
-        String purpose = jwtUtil.extractPurpose(webAuthnToken);
-
-        if (!employee.getId().equals(verifiedEmployeeId)
-                || !"webauthn".equals(authMethod)
-                || !"attendance_check_in".equals(purpose)) {
-            throw new BadRequestException("Invalid biometric verification for this employee");
-        }
-
-        request.setWebAuthnAuthenticated(true);
-    }
 
     private double calculateWorkHours(LocalDateTime checkIn, LocalDateTime checkOut) {
         Duration duration = Duration.between(checkIn, checkOut);
