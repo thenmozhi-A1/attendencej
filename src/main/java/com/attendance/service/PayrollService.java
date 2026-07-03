@@ -17,7 +17,9 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -62,9 +64,18 @@ public class PayrollService {
         BigDecimal monthlySalary = employee.getMonthlySalary() != null ? employee.getMonthlySalary() : BigDecimal.ZERO;
         BigDecimal dailyRate = monthlySalary.divide(BigDecimal.valueOf(daysInMonth), 2, RoundingMode.HALF_UP);
 
-        double leaveDays = calculateApprovedLeaveDays(employee.getId(), startDate, endDate);
+        Set<LocalDate> approvedLeaveDates = getApprovedLeaveDates(employee.getId(), startDate, endDate);
+
         List<AttendanceRecord> records = attendanceRecordRepository.findByEmployeeIdAndDateBetween(
                 employee.getId(), startDate, endDate);
+                
+        double manualLeaveDays = records.stream()
+                .filter(record -> record.getStatus() == AttendanceRecord.AttendanceStatus.ON_LEAVE)
+                .filter(record -> !approvedLeaveDates.contains(record.getDate()))
+                .count();
+                
+        double leaveDays = approvedLeaveDates.size() + manualLeaveDays;
+
         double absentDays = records.stream()
                 .filter(record -> record.getStatus() == AttendanceRecord.AttendanceStatus.ABSENT)
                 .count();
@@ -98,17 +109,21 @@ public class PayrollService {
                 .build();
     }
 
-    private double calculateApprovedLeaveDays(Long employeeId, LocalDate startDate, LocalDate endDate) {
-        return leaveRequestRepository
+    private Set<LocalDate> getApprovedLeaveDates(Long employeeId, LocalDate startDate, LocalDate endDate) {
+        Set<LocalDate> leaveDates = new HashSet<>();
+        List<LeaveRequest> approvedLeaves = leaveRequestRepository
                 .findByEmployeeIdAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
-                        employeeId, LeaveRequest.LeaveStatus.APPROVED, endDate, startDate)
-                .stream()
-                .mapToLong(leave -> {
-                    LocalDate effectiveStart = leave.getStartDate().isBefore(startDate) ? startDate : leave.getStartDate();
-                    LocalDate effectiveEnd = leave.getEndDate().isAfter(endDate) ? endDate : leave.getEndDate();
-                    return ChronoUnit.DAYS.between(effectiveStart, effectiveEnd) + 1;
-                })
-                .sum();
+                        employeeId, LeaveRequest.LeaveStatus.APPROVED, endDate, startDate);
+                        
+        for (LeaveRequest leave : approvedLeaves) {
+            LocalDate effectiveStart = leave.getStartDate().isBefore(startDate) ? startDate : leave.getStartDate();
+            LocalDate effectiveEnd = leave.getEndDate().isAfter(endDate) ? endDate : leave.getEndDate();
+            
+            for (LocalDate date = effectiveStart; !date.isAfter(effectiveEnd); date = date.plusDays(1)) {
+                leaveDates.add(date);
+            }
+        }
+        return leaveDates;
     }
 
     private BigDecimal sum(List<BigDecimal> values) {
