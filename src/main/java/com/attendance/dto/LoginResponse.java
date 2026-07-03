@@ -18,4 +18,5 @@ public class LoginResponse {
     private String employeeCode;
     private String department;
     private String email;
+    private java.math.BigDecimal monthlySalary;
 }

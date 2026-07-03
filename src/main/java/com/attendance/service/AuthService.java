@@ -44,6 +44,7 @@ public class AuthService {
                 .employeeCode(employee.getEmployeeCode())
                 .department(employee.getDepartment() != null ? employee.getDepartment().getName() : null)
                 .email(employee.getEmail())
+                .monthlySalary(employee.getMonthlySalary())
                 .build();
     }
 
@@ -68,6 +69,7 @@ public class AuthService {
                 .employeeCode(employee.getEmployeeCode())
                 .department(employee.getDepartment() != null ? employee.getDepartment().getName() : null)
                 .email(employee.getEmail())
+                .monthlySalary(employee.getMonthlySalary())
                 .build();
     }
 
