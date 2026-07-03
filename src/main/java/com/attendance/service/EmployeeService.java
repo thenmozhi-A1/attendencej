@@ -83,6 +83,7 @@ public class EmployeeService {
                 .phone(employeeDTO.getPhone())
                 .role(role)
                 .monthlySalary(employeeDTO.getMonthlySalary() != null ? employeeDTO.getMonthlySalary() : BigDecimal.ZERO)
+                .hireDate(employeeDTO.getHireDate())
                 .isActive(employeeDTO.getIsActive() != null ? employeeDTO.getIsActive() : true)
                 .password(employeeDTO.getPassword() != null && !employeeDTO.getPassword().isBlank() 
                     ? passwordEncoder.encode(employeeDTO.getPassword()) 
@@ -92,6 +93,10 @@ public class EmployeeService {
         if (employeeDTO.getDepartmentId() != null) {
             Department department = departmentRepository.findById(employeeDTO.getDepartmentId())
                     .orElseThrow(() -> new ResourceNotFoundException("Department", "id", employeeDTO.getDepartmentId()));
+            employee.setDepartment(department);
+        } else if (employeeDTO.getDepartment() != null && !employeeDTO.getDepartment().isBlank()) {
+            Department department = departmentRepository.findByName(employeeDTO.getDepartment())
+                    .orElseThrow(() -> new ResourceNotFoundException("Department", "name", employeeDTO.getDepartment()));
             employee.setDepartment(department);
         }
 
@@ -137,6 +142,14 @@ public class EmployeeService {
             Department department = departmentRepository.findById(employeeDTO.getDepartmentId())
                     .orElseThrow(() -> new ResourceNotFoundException("Department", "id", employeeDTO.getDepartmentId()));
             employee.setDepartment(department);
+        } else if (employeeDTO.getDepartment() != null && !employeeDTO.getDepartment().isBlank()) {
+            Department department = departmentRepository.findByName(employeeDTO.getDepartment())
+                    .orElseThrow(() -> new ResourceNotFoundException("Department", "name", employeeDTO.getDepartment()));
+            employee.setDepartment(department);
+        }
+        
+        if (employeeDTO.getHireDate() != null) {
+            employee.setHireDate(employeeDTO.getHireDate());
         }
 
         Employee updatedEmployee = employeeRepository.save(employee);
@@ -177,12 +190,12 @@ public class EmployeeService {
                 .departmentName(employee.getDepartment() != null ? employee.getDepartment().getName() : null)
                 .department(employee.getDepartment() != null ? employee.getDepartment().getName() : null)
                 .monthlySalary(employee.getMonthlySalary())
+                .hireDate(employee.getHireDate())
                 .isActive(employee.getIsActive())
                 .status(Boolean.TRUE.equals(employee.getIsActive()) ? "active" : "inactive")
                 .createdAt(employee.getCreatedAt())
                 .build();
     }
-
     private String resolveName(EmployeeDTO employeeDTO) {
         if (employeeDTO.getName() != null && !employeeDTO.getName().isBlank()) {
             return employeeDTO.getName().trim();

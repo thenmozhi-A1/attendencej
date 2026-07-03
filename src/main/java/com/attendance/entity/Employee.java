@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -42,6 +43,9 @@ public class Employee {
     @Column(name = "monthly_salary", precision = 12, scale = 2)
     @Builder.Default
     private BigDecimal monthlySalary = BigDecimal.ZERO;
+
+    @Column(name = "hire_date")
+    private LocalDate hireDate;
 
     @Column(name = "is_active")
     @Builder.Default
