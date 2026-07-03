@@ -1,6 +1,7 @@
 package com.attendance.config;
 
 import com.attendance.util.JwtUtil;
+import com.attendance.repository.EmployeeRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +22,7 @@ import java.util.List;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final EmployeeRepository employeeRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -40,6 +42,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 String username = jwtUtil.extractUsername(token);
                 Long employeeId = jwtUtil.extractEmployeeId(token);
                 String role = jwtUtil.extractRole(token);
+
+                if (!employeeRepository.existsById(employeeId)) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
                 List<SimpleGrantedAuthority> authorities = List.of(
                         new SimpleGrantedAuthority("ROLE_" + role)
