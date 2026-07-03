@@ -14,4 +14,8 @@ public class LoginResponse {
     private Long employeeId;
     private String role;
     private String name;
+    private String firstName;
+    private String employeeCode;
+    private String department;
+    private String email;
 }

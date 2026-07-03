@@ -40,6 +40,10 @@ public class AuthService {
                 .employeeId(employee.getId())
                 .role(employee.getRole().name())
                 .name(employee.getName())
+                .firstName(employee.getName() != null ? employee.getName().split(" ")[0] : "User")
+                .employeeCode(employee.getEmployeeCode())
+                .department(employee.getDepartment() != null ? employee.getDepartment().getName() : null)
+                .email(employee.getEmail())
                 .build();
     }
 
@@ -60,6 +64,10 @@ public class AuthService {
                 .employeeId(employeeId)
                 .role(role)
                 .name(employee.getName())
+                .firstName(employee.getName() != null ? employee.getName().split(" ")[0] : "User")
+                .employeeCode(employee.getEmployeeCode())
+                .department(employee.getDepartment() != null ? employee.getDepartment().getName() : null)
+                .email(employee.getEmail())
                 .build();
     }
 

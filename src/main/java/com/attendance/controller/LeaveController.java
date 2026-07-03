@@ -22,7 +22,12 @@ public class LeaveController {
 
     @PostMapping("/request")
     public ResponseEntity<ApiResponse<LeaveRequestDTO>> createLeaveRequest(
-            @Valid @RequestBody LeaveRequestDTO requestDTO) {
+            @Valid @RequestBody LeaveRequestDTO requestDTO,
+            @RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.substring(7);
+        Long employeeId = jwtUtil.extractEmployeeId(token);
+        requestDTO.setEmployeeId(employeeId);
+        
         LeaveRequestDTO created = leaveService.createLeaveRequest(requestDTO);
         return ResponseEntity.ok(ApiResponse.success("Leave request created", created));
     }
