@@ -100,8 +100,15 @@ public class EmployeeService {
                     .orElseThrow(() -> new ResourceNotFoundException("Department", "id", employeeDTO.getDepartmentId()));
             employee.setDepartment(department);
         } else if (employeeDTO.getDepartment() != null && !employeeDTO.getDepartment().isBlank()) {
-            Department department = departmentRepository.findByName(employeeDTO.getDepartment())
-                    .orElseThrow(() -> new ResourceNotFoundException("Department", "name", employeeDTO.getDepartment()));
+            String deptName = employeeDTO.getDepartment().trim();
+            Department department = departmentRepository.findByName(deptName)
+                    .orElseGet(() -> {
+                        Department newDept = Department.builder()
+                                .name(deptName)
+                                .description(deptName.substring(0, 1).toUpperCase() + deptName.substring(1) + " Department")
+                                .build();
+                        return departmentRepository.save(newDept);
+                    });
             employee.setDepartment(department);
         }
 
@@ -148,8 +155,15 @@ public class EmployeeService {
                     .orElseThrow(() -> new ResourceNotFoundException("Department", "id", employeeDTO.getDepartmentId()));
             employee.setDepartment(department);
         } else if (employeeDTO.getDepartment() != null && !employeeDTO.getDepartment().isBlank()) {
-            Department department = departmentRepository.findByName(employeeDTO.getDepartment())
-                    .orElseThrow(() -> new ResourceNotFoundException("Department", "name", employeeDTO.getDepartment()));
+            String deptName = employeeDTO.getDepartment().trim();
+            Department department = departmentRepository.findByName(deptName)
+                    .orElseGet(() -> {
+                        Department newDept = Department.builder()
+                                .name(deptName)
+                                .description(deptName.substring(0, 1).toUpperCase() + deptName.substring(1) + " Department")
+                                .build();
+                        return departmentRepository.save(newDept);
+                    });
             employee.setDepartment(department);
         }
         
