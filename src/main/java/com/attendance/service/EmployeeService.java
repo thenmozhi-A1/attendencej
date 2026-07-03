@@ -71,13 +71,18 @@ public class EmployeeService {
             throw new BadRequestException("Employee with email " + employeeDTO.getEmail() + " already exists");
         }
 
-        if (employeeRepository.existsByEmployeeCode(employeeDTO.getEmployeeCode())) {
-            throw new BadRequestException("Employee with code " + employeeDTO.getEmployeeCode() + " already exists");
+        String empCode = employeeDTO.getEmployeeCode();
+        if (empCode == null || empCode.trim().isEmpty()) {
+            empCode = employeeRepository.findTopByOrderByIdDesc()
+                    .map(emp -> "EMP" + String.format("%03d", emp.getId() + 1))
+                    .orElse("EMP001");
+        } else if (employeeRepository.existsByEmployeeCode(empCode)) {
+            throw new BadRequestException("Employee with code " + empCode + " already exists");
         }
 
         Employee.Role role = Employee.Role.valueOf(employeeDTO.getRole().toUpperCase());
         Employee employee = Employee.builder()
-                .employeeCode(employeeDTO.getEmployeeCode())
+                .employeeCode(empCode)
                 .name(resolveName(employeeDTO))
                 .email(employeeDTO.getEmail())
                 .phone(employeeDTO.getPhone())
