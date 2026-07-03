@@ -1,15 +1,14 @@
 package com.attendance.config;
 
-import com.attendance.entity.Department;
-import com.attendance.entity.Employee;
-import com.attendance.repository.DepartmentRepository;
-import com.attendance.repository.EmployeeRepository;
+import com.attendance.entity.*;
+import com.attendance.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Component
 @RequiredArgsConstructor
@@ -17,6 +16,9 @@ public class DatabaseSeeder implements CommandLineRunner {
 
     private final DepartmentRepository departmentRepository;
     private final EmployeeRepository employeeRepository;
+    private final HolidayRepository holidayRepository;
+    private final RegularizationRequestRepository regularizationRequestRepository;
+    private final OrganizationConfigRepository organizationConfigRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -62,6 +64,27 @@ public class DatabaseSeeder implements CommandLineRunner {
                     .password(passwordEncoder.encode("password123"))
                     .build();
             employeeRepository.save(techEmployee);
+            
+            // Seed Organization Config (Weekly off logic fallback)
+            organizationConfigRepository.save(OrganizationConfig.builder()
+                    .configKey("is_weekend_weekly_off")
+                    .configValue("true")
+                    .build());
+
+            // Seed Mock Holidays for this month
+            LocalDate today = LocalDate.now();
+            holidayRepository.save(Holiday.builder()
+                    .name("Company Foundation Day")
+                    .date(today.withDayOfMonth(15))
+                    .build());
+
+            // Seed Regularization Request
+            regularizationRequestRepository.save(RegularizationRequest.builder()
+                    .employee(techEmployee)
+                    .date(today.minusDays(2))
+                    .reason("Forgot to checkout via app")
+                    .status(RegularizationRequest.RequestStatus.PENDING)
+                    .build());
 
             System.out.println("=================================================");
             System.out.println("DATABASE SEEDED SUCCESSFULLY WITH DEFAULT USERS!");

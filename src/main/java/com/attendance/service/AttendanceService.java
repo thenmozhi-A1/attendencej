@@ -4,12 +4,10 @@ import com.attendance.dto.AttendanceDTO;
 import com.attendance.dto.CheckInRequest;
 import com.attendance.dto.CheckOutRequest;
 import com.attendance.dto.DashboardStats;
-import com.attendance.entity.AttendanceRecord;
-import com.attendance.entity.Employee;
+import com.attendance.entity.*;
 import com.attendance.exception.BadRequestException;
 import com.attendance.exception.ResourceNotFoundException;
-import com.attendance.repository.AttendanceRecordRepository;
-import com.attendance.repository.EmployeeRepository;
+import com.attendance.repository.*;
 import com.attendance.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,6 +26,10 @@ public class AttendanceService {
 
     private final AttendanceRecordRepository attendanceRecordRepository;
     private final EmployeeRepository employeeRepository;
+    private final LeaveRequestRepository leaveRequestRepository;
+    private final HolidayRepository holidayRepository;
+    private final RegularizationRequestRepository regularizationRequestRepository;
+    private final OrganizationConfigRepository organizationConfigRepository;
     private final JwtUtil jwtUtil;
 
     private static final LocalTime LATE_THRESHOLD = LocalTime.of(9, 30);
@@ -123,16 +125,52 @@ public class AttendanceService {
     public DashboardStats getDashboardStats() {
         LocalDate today = LocalDate.now();
         long totalEmployees = employeeRepository.findByIsActiveTrue().size();
-        long presentToday = attendanceRecordRepository.countDistinctEmployeeByDateAndStatus(
-                today, AttendanceRecord.AttendanceStatus.PRESENT);
-        long lateToday = attendanceRecordRepository.countDistinctEmployeeByDateAndStatus(
-                today, AttendanceRecord.AttendanceStatus.LATE);
-        long halfDayToday = attendanceRecordRepository.countDistinctEmployeeByDateAndStatus(
-                today, AttendanceRecord.AttendanceStatus.HALF_DAY);
-        long onLeaveToday = attendanceRecordRepository.countDistinctEmployeeByDateAndStatus(
-                today, AttendanceRecord.AttendanceStatus.ON_LEAVE);
+        
+        List<AttendanceRecord> todayRecords = attendanceRecordRepository.findByDate(today);
+        
+        long presentToday = todayRecords.stream()
+                .filter(r -> r.getStatus() == AttendanceRecord.AttendanceStatus.PRESENT)
+                .count();
+        long lateToday = todayRecords.stream()
+                .filter(r -> r.getStatus() == AttendanceRecord.AttendanceStatus.LATE)
+                .count();
+        long halfDayToday = todayRecords.stream()
+                .filter(r -> r.getStatus() == AttendanceRecord.AttendanceStatus.HALF_DAY)
+                .count();
+        long onLeaveToday = todayRecords.stream()
+                .filter(r -> r.getStatus() == AttendanceRecord.AttendanceStatus.ON_LEAVE)
+                .count();
+                
         long absentToday = totalEmployees - presentToday - lateToday - halfDayToday - onLeaveToday;
         if (absentToday < 0) absentToday = 0;
+
+        // Dynamic Calculations from Records
+        long checkedOutToday = todayRecords.stream()
+                .filter(r -> r.getCheckOutTime() != null)
+                .count();
+                
+        long earlyGoingToday = todayRecords.stream()
+                .filter(r -> r.getCheckOutTime() != null && r.getCheckOutTime().toLocalTime().isBefore(LocalTime.of(17, 0)))
+                .count();
+
+        long pendingLeaves = leaveRequestRepository.findByStatus(LeaveRequest.LeaveStatus.PENDING).size();
+        
+        long regularizationRequests = regularizationRequestRepository.findByStatus(RegularizationRequest.RequestStatus.PENDING).size();
+        
+        // Calculate holidays in the current month (mock representation since there's no complex UI for this yet)
+        LocalDate startOfMonth = today.withDayOfMonth(1);
+        LocalDate endOfMonth = today.withDayOfMonth(today.lengthOfMonth());
+        long holidays = holidayRepository.findByDateBetween(startOfMonth, endOfMonth).size();
+        
+        // Configurable Weekly Offs fallback
+        long weeklyOffs = 0;
+        String isWeeklyOffConfig = organizationConfigRepository.findByConfigKey("is_weekend_weekly_off")
+                .map(OrganizationConfig::getConfigValue)
+                .orElse("true");
+                
+        if ("true".equalsIgnoreCase(isWeeklyOffConfig) && today.getDayOfWeek().getValue() > 5) {
+            weeklyOffs = totalEmployees;
+        }
 
         return DashboardStats.builder()
                 .totalEmployees(totalEmployees)
@@ -140,6 +178,12 @@ public class AttendanceService {
                 .absentToday(absentToday)
                 .lateToday(lateToday)
                 .onLeaveToday(onLeaveToday)
+                .weeklyOffs(weeklyOffs)
+                .holidays(holidays)
+                .checkedOutToday(checkedOutToday)
+                .earlyGoingToday(earlyGoingToday)
+                .pendingLeaveRequests(pendingLeaves)
+                .regularizationRequests(regularizationRequests)
                 .build();
     }
 
@@ -151,8 +195,6 @@ public class AttendanceService {
         }
         return AttendanceRecord.AttendanceStatus.PRESENT;
     }
-
-
 
     private double calculateWorkHours(LocalDateTime checkIn, LocalDateTime checkOut) {
         Duration duration = Duration.between(checkIn, checkOut);
