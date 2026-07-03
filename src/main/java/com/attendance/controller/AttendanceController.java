@@ -5,6 +5,7 @@ import com.attendance.dto.AttendanceDTO;
 import com.attendance.dto.CheckInRequest;
 import com.attendance.dto.CheckOutRequest;
 import com.attendance.dto.DashboardStats;
+import com.attendance.dto.AdminAttendanceEditRequest;
 import com.attendance.service.AttendanceService;
 import com.attendance.util.JwtUtil;
 import jakarta.validation.Valid;
@@ -67,5 +68,12 @@ public class AttendanceController {
     public ResponseEntity<ApiResponse<DashboardStats>> getDashboardStats() {
         DashboardStats stats = attendanceService.getDashboardStats();
         return ResponseEntity.ok(ApiResponse.success("Dashboard stats retrieved", stats));
+    }
+
+    @PutMapping("/admin/edit")
+    public ResponseEntity<ApiResponse<AttendanceDTO>> editAttendance(
+            @Valid @RequestBody AdminAttendanceEditRequest request) {
+        AttendanceDTO response = attendanceService.updateAttendanceByAdmin(request);
+        return ResponseEntity.ok(ApiResponse.success("Attendance updated successfully", response));
     }
 }

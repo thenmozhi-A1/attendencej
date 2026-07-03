@@ -4,6 +4,7 @@ import com.attendance.dto.AttendanceDTO;
 import com.attendance.dto.CheckInRequest;
 import com.attendance.dto.CheckOutRequest;
 import com.attendance.dto.DashboardStats;
+import com.attendance.dto.AdminAttendanceEditRequest;
 import com.attendance.entity.*;
 import com.attendance.exception.BadRequestException;
 import com.attendance.exception.ResourceNotFoundException;
@@ -111,6 +112,33 @@ public class AttendanceService {
         return records.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public AttendanceDTO updateAttendanceByAdmin(AdminAttendanceEditRequest request) {
+        Employee employee = employeeRepository.findById(request.getEmployeeId())
+                .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", request.getEmployeeId()));
+
+        AttendanceRecord record = attendanceRecordRepository.findByEmployeeIdAndDate(employee.getId(), request.getDate())
+                .orElseGet(() -> AttendanceRecord.builder()
+                        .employee(employee)
+                        .date(request.getDate())
+                        .build());
+
+        record.setStatus(request.getStatus());
+        if (request.getRemarks() != null) {
+            record.setRemarks(request.getRemarks());
+        }
+
+        // If marked absent/leave, clear check-in/out times to avoid inconsistencies
+        if (request.getStatus() == AttendanceRecord.AttendanceStatus.ABSENT || request.getStatus() == AttendanceRecord.AttendanceStatus.ON_LEAVE) {
+            record.setCheckInTime(null);
+            record.setCheckOutTime(null);
+            record.setWorkHours(0.0);
+        }
+
+        AttendanceRecord updatedRecord = attendanceRecordRepository.save(record);
+        return convertToDTO(updatedRecord);
     }
 
     @Transactional(readOnly = true)
