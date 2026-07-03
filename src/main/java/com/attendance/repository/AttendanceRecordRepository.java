@@ -14,6 +14,8 @@ import java.util.Optional;
 public interface AttendanceRecordRepository extends JpaRepository<AttendanceRecord, Long> {
 
     List<AttendanceRecord> findByEmployeeId(Long employeeId);
+    
+    void deleteByEmployeeId(Long employeeId);
 
     List<AttendanceRecord> findByEmployeeIdAndDateBetween(Long employeeId, LocalDate startDate, LocalDate endDate);
 

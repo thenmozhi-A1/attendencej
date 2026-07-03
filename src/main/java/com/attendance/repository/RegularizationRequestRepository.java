@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface RegularizationRequestRepository extends JpaRepository<RegularizationRequest, Long> {
     List<RegularizationRequest> findByStatus(RegularizationRequest.RequestStatus status);
+    
+    void deleteByEmployeeId(Long employeeId);
 }

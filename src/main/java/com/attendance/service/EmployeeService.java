@@ -7,6 +7,9 @@ import com.attendance.exception.BadRequestException;
 import com.attendance.exception.ResourceNotFoundException;
 import com.attendance.repository.DepartmentRepository;
 import com.attendance.repository.EmployeeRepository;
+import com.attendance.repository.AttendanceRecordRepository;
+import com.attendance.repository.LeaveRequestRepository;
+import com.attendance.repository.RegularizationRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +25,9 @@ public class EmployeeService {
 
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
+    private final AttendanceRecordRepository attendanceRecordRepository;
+    private final LeaveRequestRepository leaveRequestRepository;
+    private final RegularizationRequestRepository regularizationRequestRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
@@ -141,8 +147,14 @@ public class EmployeeService {
     public void deleteEmployee(Long id) {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", id));
-        employee.setIsActive(false);
-        employeeRepository.save(employee);
+        
+        // Hard delete all related records first to avoid foreign key constraints
+        attendanceRecordRepository.deleteByEmployeeId(id);
+        leaveRequestRepository.deleteByEmployeeId(id);
+        regularizationRequestRepository.deleteByEmployeeId(id);
+        
+        // Hard delete the employee
+        employeeRepository.delete(employee);
     }
 
     @Transactional(readOnly = true)
